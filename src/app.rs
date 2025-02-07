@@ -1,9 +1,11 @@
 use crate::graphics::{create_graphics, Graphics, Rc};
+use wgpu::Color;
 use winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
     event::WindowEvent,
     event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy},
+    keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowId},
 };
 
@@ -23,15 +25,9 @@ impl App {
         }
     }
 
-    fn draw(&mut self) {
-        if let State::Ready(gfx) = &mut self.state {
-            gfx.draw();
-        }
-    }
-
-    fn resized(&mut self, size: PhysicalSize<u32>) {
-        if let State::Ready(gfx) = &mut self.state {
-            gfx.resize(size);
+    fn with_gfx<F: FnOnce(&mut Graphics)>(&mut self, f: F) {
+        if let State::Ready(ref mut gfx) = self.state {
+            f(gfx);
         }
     }
 }
@@ -44,8 +40,25 @@ impl ApplicationHandler<Graphics> for App {
         event: WindowEvent,
     ) {
         match event {
-            WindowEvent::Resized(size) => self.resized(size),
-            WindowEvent::RedrawRequested => self.draw(),
+            WindowEvent::Resized(size) => self.with_gfx(|gfx| gfx.resize(size)),
+            WindowEvent::RedrawRequested => self.with_gfx(|gfx| {
+                gfx.draw();
+                gfx.window.request_redraw();
+            }),
+            WindowEvent::KeyboardInput { event, .. } if event.state.is_pressed() => {
+                match event.physical_key {
+                    PhysicalKey::Code(KeyCode::Escape) => event_loop.exit(),
+                    _ => {}
+                }
+            }
+            WindowEvent::CursorMoved { position, .. } => self.with_gfx(|gfx| {
+                gfx.color = Color {
+                    r: position.x / gfx.surface_config.width as f64,
+                    g: position.y / gfx.surface_config.height as f64,
+                    b: 1.0,
+                    a: 1.0,
+                };
+            }),
             WindowEvent::CloseRequested => event_loop.exit(),
             _ => {}
         }

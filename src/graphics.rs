@@ -32,8 +32,12 @@ pub async fn create_graphics(window: Rc<Window>, proxy: EventLoopProxy<Graphics>
             &DeviceDescriptor {
                 label: None,
                 required_features: Features::empty(), // Specifies the required features by the device request. Fails if the adapter can't provide them.
+                // WebGL doesn't support all of wgpu features, disabling some
+                #[cfg(target_arch = "wasm32")]
                 required_limits: Limits::downlevel_webgl2_defaults()
                     .using_resolution(adapter.limits()),
+                #[cfg(not(target_arch = "wasm32"))]
+                required_limits: Limits::default().using_resolution(adapter.limits()),
                 memory_hints: MemoryHints::Performance,
             },
             None,
@@ -62,6 +66,7 @@ pub async fn create_graphics(window: Rc<Window>, proxy: EventLoopProxy<Graphics>
         device,
         queue,
         render_pipeline,
+        color: Color::GREEN,
     };
 
     let _ = proxy.send_event(gfx);
@@ -135,7 +140,7 @@ impl Graphics {
                     view: &view,
                     resolve_target: None,
                     ops: Operations {
-                        load: LoadOp::Clear(Color::GREEN),
+                        load: LoadOp::Clear(self.color),
                         store: StoreOp::Store,
                     },
                 })],
