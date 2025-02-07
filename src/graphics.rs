@@ -1,11 +1,11 @@
 use std::borrow::Cow;
 
 use wgpu::{
-    util::RenderEncoder, Adapter, Color, CommandEncoderDescriptor, Device, DeviceDescriptor,
-    Features, FragmentState, Instance, Limits, LoadOp, MemoryHints, Operations, PowerPreference,
-    Queue, RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline,
-    RenderPipelineDescriptor, RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, StoreOp,
-    Surface, SurfaceConfiguration, TextureFormat, TextureViewDescriptor, VertexState,
+    Adapter, Color, CommandEncoderDescriptor, Device, DeviceDescriptor, Features, FragmentState,
+    Instance, Limits, LoadOp, MemoryHints, Operations, PowerPreference, Queue,
+    RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor,
+    RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, StoreOp, Surface,
+    SurfaceConfiguration, TextureFormat, TextureViewDescriptor, VertexState,
 };
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy, window::Window};
 
@@ -31,7 +31,7 @@ pub async fn create_graphics(window: Rc<Window>, proxy: EventLoopProxy<Graphics>
         .request_device(
             &DeviceDescriptor {
                 label: None,
-                required_features: Features::empty(), // Specifies the required features by the device request. Fails if the adapt er can't provide them.
+                required_features: Features::empty(), // Specifies the required features by the device request. Fails if the adapter can't provide them.
                 required_limits: Limits::downlevel_webgl2_defaults()
                     .using_resolution(adapter.limits()),
                 memory_hints: MemoryHints::Performance,
@@ -98,14 +98,15 @@ fn create_pipeline(device: &Device, swap_chain_format: TextureFormat) -> RenderP
 
 #[derive(Debug)]
 pub struct Graphics {
-    window: Rc<Window>,
-    instance: Instance,
-    surface: Surface<'static>,
-    surface_config: SurfaceConfiguration,
-    adapter: Adapter,
-    device: Device,
-    queue: Queue,
-    render_pipeline: RenderPipeline,
+    pub window: Rc<Window>,
+    pub instance: Instance,
+    pub surface: Surface<'static>,
+    pub surface_config: SurfaceConfiguration,
+    pub adapter: Adapter,
+    pub device: Device,
+    pub queue: Queue,
+    pub render_pipeline: RenderPipeline,
+    pub color: Color,
 }
 
 impl Graphics {
