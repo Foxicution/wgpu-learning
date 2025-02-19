@@ -73,6 +73,7 @@ pub async fn create_graphics(window: Rc<Window>, proxy: EventLoopProxy<Graphics>
 }
 
 fn create_pipeline(device: &Device, swap_chain_format: TextureFormat) -> RenderPipeline {
+    // could use wgpu::include_wgsl! macro here
     let shader = device.create_shader_module(ShaderModuleDescriptor {
         label: None,
         source: ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
