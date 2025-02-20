@@ -1,11 +1,13 @@
+use crate::vertex::{Vertex, VERTICES};
+use bytemuck::cast_slice;
 use std::borrow::Cow;
-
 use wgpu::{
-    Adapter, Color, CommandEncoderDescriptor, Device, DeviceDescriptor, Features, FragmentState,
-    Instance, Limits, LoadOp, MemoryHints, Operations, PowerPreference, Queue,
-    RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor,
-    RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, StoreOp, Surface,
-    SurfaceConfiguration, TextureFormat, TextureViewDescriptor, VertexState,
+    util::{BufferInitDescriptor, DeviceExt},
+    Adapter, Buffer, BufferUsages, Color, CommandEncoderDescriptor, Device, DeviceDescriptor,
+    Features, FragmentState, Instance, Limits, LoadOp, MemoryHints, Operations, PowerPreference,
+    Queue, RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline,
+    RenderPipelineDescriptor, RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, StoreOp,
+    Surface, SurfaceConfiguration, TextureFormat, TextureViewDescriptor, VertexState,
 };
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy, window::Window};
 
@@ -57,6 +59,12 @@ pub async fn create_graphics(window: Rc<Window>, proxy: EventLoopProxy<Graphics>
 
     let render_pipeline = create_pipeline(&device, surface_config.format);
 
+    let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
+        label: None,
+        contents: cast_slice(VERTICES),
+        usage: BufferUsages::VERTEX,
+    });
+
     let gfx = Graphics {
         window: window.clone(),
         instance,
@@ -66,6 +74,7 @@ pub async fn create_graphics(window: Rc<Window>, proxy: EventLoopProxy<Graphics>
         device,
         queue,
         render_pipeline,
+        vertex_buffer,
         color: Color::GREEN,
     };
 
@@ -85,7 +94,7 @@ fn create_pipeline(device: &Device, swap_chain_format: TextureFormat) -> RenderP
         vertex: VertexState {
             module: &shader,
             entry_point: Some("vs_main"),
-            buffers: &[],
+            buffers: &[Vertex::desc()],
             compilation_options: Default::default(),
         },
         fragment: Some(FragmentState {
@@ -112,6 +121,7 @@ pub struct Graphics {
     pub device: Device,
     pub queue: Queue,
     pub render_pipeline: RenderPipeline,
+    pub vertex_buffer: Buffer,
     pub color: Color,
 }
 
@@ -150,7 +160,8 @@ impl Graphics {
                 occlusion_query_set: None,
             });
             r_pass.set_pipeline(&self.render_pipeline);
-            r_pass.draw(0..3, 0..1);
+            r_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            r_pass.draw(0..VERTICES.len() as u32, 0..1);
         } // `r_pass` dropped here
 
         self.queue.submit(Some(encoder.finish()));

@@ -1,5 +1,6 @@
 mod app;
 mod graphics;
+mod vertex;
 
 use crate::{app::App, graphics::Graphics};
 use winit::event_loop::{ControlFlow, EventLoop};
