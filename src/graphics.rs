@@ -1,11 +1,11 @@
-use crate::vertex::{Vertex, VERTICES};
+use crate::vertex::{Vertex, INDICES, VERTICES};
 use bytemuck::cast_slice;
 use std::borrow::Cow;
 use wgpu::{
-    util::{BufferInitDescriptor, DeviceExt},
+    util::{BufferInitDescriptor, DeviceExt, RenderEncoder},
     Adapter, Buffer, BufferUsages, Color, CommandEncoderDescriptor, Device, DeviceDescriptor,
-    Features, FragmentState, Instance, Limits, LoadOp, MemoryHints, Operations, PowerPreference,
-    Queue, RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline,
+    Features, FragmentState, IndexFormat, Instance, Limits, LoadOp, MemoryHints, Operations,
+    PowerPreference, Queue, RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline,
     RenderPipelineDescriptor, RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, StoreOp,
     Surface, SurfaceConfiguration, TextureFormat, TextureViewDescriptor, VertexState,
 };
@@ -65,6 +65,12 @@ pub async fn create_graphics(window: Rc<Window>, proxy: EventLoopProxy<Graphics>
         usage: BufferUsages::VERTEX,
     });
 
+    let index_buffer = device.create_buffer_init(&BufferInitDescriptor {
+        label: Some("Index Buffer"),
+        contents: cast_slice(INDICES),
+        usage: BufferUsages::INDEX,
+    });
+
     let gfx = Graphics {
         window: window.clone(),
         instance,
@@ -75,6 +81,7 @@ pub async fn create_graphics(window: Rc<Window>, proxy: EventLoopProxy<Graphics>
         queue,
         render_pipeline,
         vertex_buffer,
+        index_buffer,
         color: Color::GREEN,
     };
 
@@ -122,6 +129,7 @@ pub struct Graphics {
     pub queue: Queue,
     pub render_pipeline: RenderPipeline,
     pub vertex_buffer: Buffer,
+    pub index_buffer: Buffer,
     pub color: Color,
 }
 
@@ -161,7 +169,8 @@ impl Graphics {
             });
             r_pass.set_pipeline(&self.render_pipeline);
             r_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            r_pass.draw(0..VERTICES.len() as u32, 0..1);
+            r_pass.set_index_buffer(self.index_buffer.slice(..), IndexFormat::Uint16);
+            r_pass.draw_indexed(0..INDICES.len() as u32, 0, 0..1);
         } // `r_pass` dropped here
 
         self.queue.submit(Some(encoder.finish()));
