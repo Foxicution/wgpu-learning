@@ -1,5 +1,6 @@
 mod app;
 mod graphics;
+mod texture;
 mod vertex;
 
 use crate::{app::App, graphics::Graphics};
