@@ -2,7 +2,6 @@ use crate::graphics::{create_graphics, Graphics, Rc};
 use wgpu::Color;
 use winit::{
     application::ApplicationHandler,
-    dpi::PhysicalSize,
     event::WindowEvent,
     event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy},
     keyboard::{KeyCode, PhysicalKey},
@@ -48,6 +47,7 @@ impl ApplicationHandler<Graphics> for App {
             WindowEvent::KeyboardInput { event, .. } if event.state.is_pressed() => {
                 match event.physical_key {
                     PhysicalKey::Code(KeyCode::Escape) => event_loop.exit(),
+                    PhysicalKey::Code(_) => {}
                     _ => {}
                 }
             }
